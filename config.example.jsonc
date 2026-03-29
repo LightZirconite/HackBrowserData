@@ -1,0 +1,40 @@
+// Discord Webhook Configuration (OPTIONAL)
+// 
+// This tool is designed for SECURITY RESEARCH and AUTHORIZED TESTING ONLY.
+// By default, all data is saved locally. This webhook feature is OPTIONAL and
+// must be explicitly configured by the user.
+//
+// HOW TO USE:
+// 1. Rename this file from "config.example.jsonc" to "config.json"
+// 2. Get your Discord webhook URL:
+//    - Discord → Server Settings → Integrations → Webhooks → New Webhook
+//    - Copy the webhook URL
+// 3. Paste your webhook URL below (between the quotes)
+// 4. Save the file
+//
+// SECURITY NOTES:
+// - This config file is NOT embedded in the executable
+// - Each user must create their own config.json file
+// - The webhook URL is YOUR personal Discord channel
+// - Never share your config.json or webhook URL with others
+// - This file is ignored by Git (.gitignore) to protect your secrets
+//
+// BEHAVIOR:
+// - If config.json doesn't exist → Data saved locally (default behavior)
+// - If discord_webhook is empty → Data saved locally (default behavior)
+// - If discord_webhook is set → Data compressed and sent to YOUR Discord, then deleted locally
+//
+// ETHICAL USE:
+// - Only use on systems you own or have explicit authorization to test
+// - This is a defensive security research tool, not for malicious purposes
+// - Respect privacy and comply with all applicable laws
+//
+{
+  // Your Discord webhook URL (leave empty to disable)
+  "discord_webhook": "",
+  
+  // Hide console window when running (Windows only, optional)
+  // true = no window/terminal visible, runs silently in background
+  // false = normal console output (default)
+  "hide_window": false
+}
